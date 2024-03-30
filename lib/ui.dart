@@ -6,7 +6,8 @@ import 'api.dart';
 String formatDateTime(String dateTimeString) {
   final DateTime dateTime = DateTime.parse(dateTimeString);
   final String formattedDate = dateTime.toIso8601String().split('T')[0];
-  final String formattedTime = dateTime.toIso8601String().split('T')[1].split('.')[0];
+  final String formattedTime =
+      dateTime.toIso8601String().split('T')[1].split('.')[0];
   return 'Date: $formattedDate\nTime: $formattedTime';
 }
 
@@ -53,7 +54,7 @@ class _MyAppState extends State<MyApp> {
     if (_fetchCommits[repository.name] == null && repository.commits == null) {
       setState(() {
         _fetchCommits[repository.name] =
-            repository.fetchCommits(_usernameController.text);
+            repository.fetchCommits(_usernameController.text, 1);
       });
     }
   }
@@ -127,11 +128,12 @@ class _MyAppState extends State<MyApp> {
                                   await _fetchAllCommits(repository);
                                   if (repository.commits != null) {
                                     Navigator.push(
-                                      // ignore: use_build_context_synchronously
                                       context,
                                       MaterialPageRoute(
                                         builder: (context) => CommitsScreen(
                                           repository: repository,
+                                          usernameController:
+                                              _usernameController,
                                         ),
                                       ),
                                     );
@@ -173,35 +175,95 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-class CommitsScreen extends StatelessWidget {
+class CommitsScreen extends StatefulWidget {
   final Repository repository;
+  final TextEditingController usernameController;
 
-  const CommitsScreen({super.key, required this.repository});
+  const CommitsScreen({
+    Key? key,
+    required this.repository,
+    required this.usernameController,
+  }) : super(key: key);
+
+  @override
+  _CommitsScreenState createState() => _CommitsScreenState();
+}
+
+class _CommitsScreenState extends State<CommitsScreen> {
+  late ScrollController _scrollController;
+  bool _loading = false;
+  int _currentPage = 1;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController()..addListener(_scrollListener);
+    _fetchCommits();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollListener() {
+    if (_scrollController.offset >=
+            _scrollController.position.maxScrollExtent &&
+        !_scrollController.position.outOfRange &&
+        !_loading) {
+      _fetchCommits();
+    }
+  }
+
+  Future<void> _fetchCommits() async {
+    setState(() {
+      _loading = true;
+    });
+
+    await widget.repository.fetchCommits(
+      widget.usernameController.text,
+      _currentPage,
+    );
+
+    setState(() {
+      _currentPage++;
+      _loading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Commits for ${repository.name}'),
+        title: Text('Commits for ${widget.repository.name}'),
       ),
-      body: ListView.builder(
-        itemCount: repository.commits?.length ?? 0,
-        itemBuilder: (context, index) {
-          final commit = repository.commits![index];
-          final formattedDateTime = commit.commitDate != null
-              ? formatDateTime(commit.commitDate!.toIso8601String())
-              : 'No date available';
-          return ListTile(
-            title: Text(commit.sha.substring(0, 7)),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(commit.message),
-                Text(formattedDateTime),
-              ],
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              itemCount: widget.repository.commits?.length ?? 0,
+              itemBuilder: (context, index) {
+                final commit = widget.repository.commits![index];
+                final formattedDateTime = commit.commitDate != null
+                    ? formatDateTime(commit.commitDate!.toIso8601String())
+                    : 'No date available';
+                return ListTile(
+                  title: Text(commit.sha.substring(0, 7)),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(commit.message),
+                      Text(formattedDateTime),
+                    ],
+                  ),
+                );
+              },
+              controller: _scrollController,
             ),
-          );
-        },
+          ),
+          if (_loading) CircularProgressIndicator(), // Display loading indicator
+        ],
       ),
     );
   }

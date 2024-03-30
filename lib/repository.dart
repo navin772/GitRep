@@ -14,10 +14,10 @@ class Repository {
         stargazersCount = json['stargazers_count'],
         commits = null;
 
-  Future<void> fetchCommits(String username) async {
+  Future<void> fetchCommits(String username, int page) async {
     const String token = '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';
     final response = await http.get(
-      Uri.parse('https://api.github.com/repos/$username/$name/commits'),
+      Uri.parse('https://api.github.com/repos/$username/$name/commits?page=$page&per_page=30'),  // Max limit is 100
       headers: {'Authorization': 'token $token'},
     );
     if (response.statusCode == 200) {
