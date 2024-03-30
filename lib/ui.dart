@@ -198,7 +198,6 @@ class _CommitsScreenState extends State<CommitsScreen> {
   void initState() {
     super.initState();
     _scrollController = ScrollController()..addListener(_scrollListener);
-    _fetchCommits();
   }
 
   @override
@@ -208,10 +207,12 @@ class _CommitsScreenState extends State<CommitsScreen> {
   }
 
   void _scrollListener() {
-    if (_scrollController.offset >=
-            _scrollController.position.maxScrollExtent &&
-        !_scrollController.position.outOfRange &&
-        !_loading) {
+    final double triggerThreshold = 0.8;
+    final double maxScrollExtent = _scrollController.position.maxScrollExtent;
+    final double currentScroll = _scrollController.offset;
+    final double triggerPoint = maxScrollExtent * triggerThreshold;
+
+    if (!_loading && currentScroll >= triggerPoint) {
       _fetchCommits();
     }
   }
