@@ -194,7 +194,7 @@ class CommitsScreen extends StatefulWidget {
 class _CommitsScreenState extends State<CommitsScreen> {
   late ScrollController _scrollController;
   bool _loading = false;
-  final bool _noMoreCommits =
+  bool _noMoreCommits =
       false; // Flag to indicate if there are no more commits left
   int _currentPage = 1;
 
@@ -223,6 +223,8 @@ class _CommitsScreenState extends State<CommitsScreen> {
   }
 
   Future<void> _fetchCommits() async {
+    if (_noMoreCommits) return; // Stop fetching if there are no more commits
+    
     setState(() {
       _loading = true;
     });
@@ -235,6 +237,9 @@ class _CommitsScreenState extends State<CommitsScreen> {
     setState(() {
       _currentPage++;
       _loading = false;
+      if (widget.repository.commits?.isEmpty ?? true) {
+        _noMoreCommits = true;
+      }
     });
   }
 
