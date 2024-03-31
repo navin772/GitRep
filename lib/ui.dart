@@ -50,12 +50,27 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
+  Future<void> _fetchAllCommitsAndNavigate(
+      BuildContext context, Repository repository) async {
+    await _fetchAllCommits(repository);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CommitsScreen(
+          repository: repository,
+          usernameController: _usernameController,
+        ),
+      ),
+    );
+  }
+
   Future<void> _fetchAllCommits(Repository repository) async {
     if (_fetchCommits[repository.name] == null && repository.commits == null) {
       setState(() {
         _fetchCommits[repository.name] =
             repository.fetchCommits(_usernameController.text, 1);
       });
+      await _fetchCommits[repository.name]!;
     }
   }
 
@@ -124,21 +139,8 @@ class _MyAppState extends State<MyApp> {
                               ),
                               trailing: IconButton(
                                 icon: const Icon(Icons.arrow_forward),
-                                onPressed: () async {
-                                  await _fetchAllCommits(repository);
-                                  if (repository.commits != null) {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => CommitsScreen(
-                                          repository: repository,
-                                          usernameController:
-                                              _usernameController,
-                                        ),
-                                      ),
-                                    );
-                                  }
-                                },
+                                onPressed: () => _fetchAllCommitsAndNavigate(
+                                    context, repository),
                               ),
                             ),
                           );
@@ -180,10 +182,10 @@ class CommitsScreen extends StatefulWidget {
   final TextEditingController usernameController;
 
   const CommitsScreen({
-    Key? key,
+    super.key,
     required this.repository,
     required this.usernameController,
-  }) : super(key: key);
+  });
 
   @override
   _CommitsScreenState createState() => _CommitsScreenState();
@@ -192,12 +194,15 @@ class CommitsScreen extends StatefulWidget {
 class _CommitsScreenState extends State<CommitsScreen> {
   late ScrollController _scrollController;
   bool _loading = false;
+  final bool _noMoreCommits =
+      false; // Flag to indicate if there are no more commits left
   int _currentPage = 1;
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController()..addListener(_scrollListener);
+    _fetchCommits();
   }
 
   @override
@@ -207,12 +212,12 @@ class _CommitsScreenState extends State<CommitsScreen> {
   }
 
   void _scrollListener() {
-    final double triggerThreshold = 0.8;
-    final double maxScrollExtent = _scrollController.position.maxScrollExtent;
-    final double currentScroll = _scrollController.offset;
-    final double triggerPoint = maxScrollExtent * triggerThreshold;
-
-    if (!_loading && currentScroll >= triggerPoint) {
+    if (_scrollController.offset >=
+            _scrollController.position.maxScrollExtent &&
+        !_scrollController.position.outOfRange &&
+        !_loading &&
+        !_noMoreCommits) {
+      // Check if there are more commits to fetch
       _fetchCommits();
     }
   }
@@ -263,7 +268,11 @@ class _CommitsScreenState extends State<CommitsScreen> {
               controller: _scrollController,
             ),
           ),
-          if (_loading) CircularProgressIndicator(), // Display loading indicator
+          if (_loading)
+            const CircularProgressIndicator(), // Display loading indicator
+          if (_noMoreCommits)
+            const Text(
+                'No more commits'), // Display message if there are no more commits left
         ],
       ),
     );
