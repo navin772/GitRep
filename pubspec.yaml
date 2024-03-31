@@ -1,5 +1,5 @@
-name: flutter_application
-description: "A new Flutter project."
+name: GitRep
+description: "An app that fetches github repos for users and their commit history."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -39,9 +39,16 @@ dependencies:
   cupertino_icons: ^1.0.6
 
 dev_dependencies:
+  flutter_launcher_icons: ^0.13.1
   build_runner: ^2.4.8
   flutter_test:
     sdk: flutter
+
+flutter_icons:
+  image_path: "icons/github.png" 
+  android: true
+  ios: true
+
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
