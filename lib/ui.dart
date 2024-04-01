@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'repository.dart';
 import 'api.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 String formatDateTime(String dateTimeString) {
   final DateTime dateTime = DateTime.parse(dateTimeString);
@@ -27,19 +28,29 @@ class _MyAppState extends State<MyApp> {
 
   ThemeMode _themeMode = ThemeMode.light;
 
-  void _toggleTheme() {
+  void _toggleTheme() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      _themeMode =
-          _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+      _themeMode = _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+      prefs.setInt('themeMode', _themeMode.index);
     });
   }
 
   @override
   void initState() {
     super.initState();
+    _retrieveThemeMode();
     _repositories = _usernameController.text.isEmpty
         ? Future.value([])
         : fetchRepositories(_usernameController.text, _currentPage);
+  }
+
+  void _retrieveThemeMode() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    int themeIndex = prefs.getInt('themeMode') ?? ThemeMode.light.index;
+    setState(() {
+      _themeMode = ThemeMode.values[themeIndex];
+    });
   }
 
   Future<void> _changePage(int page) async {
