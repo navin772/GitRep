@@ -1,4 +1,3 @@
-// ui.dart
 import 'package:flutter/material.dart';
 import 'repository.dart';
 import 'api.dart';
@@ -12,7 +11,7 @@ String formatDateTime(String dateTimeString) {
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+  const MyApp({Key? key}) : super(key: key);
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -25,6 +24,15 @@ class _MyAppState extends State<MyApp> {
   final TextEditingController _usernameController = TextEditingController();
 
   bool _canLoadNextPage = true;
+
+  ThemeMode _themeMode = ThemeMode.light;
+
+  void _toggleTheme() {
+    setState(() {
+      _themeMode =
+          _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+    });
+  }
 
   @override
   void initState() {
@@ -78,14 +86,18 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        hintColor: Colors.orangeAccent,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
+      theme: ThemeData.light(),
+      darkTheme: ThemeData.dark(),
+      themeMode: _themeMode,
       home: Scaffold(
         appBar: AppBar(
           title: const Text('GitHub Repositories'),
+          actions: [
+            IconButton(
+              icon: Icon(Icons.lightbulb),
+              onPressed: _toggleTheme,
+            ),
+          ],
         ),
         body: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -182,7 +194,6 @@ class CommitsScreen extends StatefulWidget {
   final TextEditingController usernameController;
 
   const CommitsScreen({
-    super.key,
     required this.repository,
     required this.usernameController,
   });
