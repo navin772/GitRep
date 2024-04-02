@@ -1,3 +1,4 @@
+// ui.dart
 import 'package:flutter/material.dart';
 import 'repository.dart';
 import 'api.dart';
@@ -31,7 +32,8 @@ class _MyAppState extends State<MyApp> {
   void _toggleTheme() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      _themeMode = _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+      _themeMode =
+          _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
       prefs.setInt('themeMode', _themeMode.index);
     });
   }
@@ -177,19 +179,25 @@ class _MyAppState extends State<MyApp> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_left),
-                    onPressed: _currentPage > 1
-                        ? () => _changePage(_currentPage - 1)
-                        : null,
-                  ),
-                  Text('Page $_currentPage'),
-                  IconButton(
-                    icon: const Icon(Icons.arrow_right),
-                    onPressed: _canLoadNextPage
-                        ? () => _changePage(_currentPage + 1)
-                        : null,
-                  ),
+                  if (_usernameController
+                      .text.isNotEmpty) // Only show if username is not empty
+                    IconButton(
+                      icon: const Icon(Icons.arrow_left),
+                      onPressed: _currentPage > 1
+                          ? () => _changePage(_currentPage - 1)
+                          : null,
+                    ),
+                  if (_usernameController
+                      .text.isNotEmpty) // Only show if username is not empty
+                    Text('Page $_currentPage'),
+                  if (_usernameController
+                      .text.isNotEmpty) // Only show if username is not empty
+                    IconButton(
+                      icon: const Icon(Icons.arrow_right),
+                      onPressed: _canLoadNextPage
+                          ? () => _changePage(_currentPage + 1)
+                          : null,
+                    ),
                 ],
               ),
             ],
@@ -246,7 +254,7 @@ class _CommitsScreenState extends State<CommitsScreen> {
 
   Future<void> _fetchCommits() async {
     if (_noMoreCommits) return; // Stop fetching if there are no more commits
-    
+
     setState(() {
       _loading = true;
     });
