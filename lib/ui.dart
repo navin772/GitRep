@@ -47,6 +47,7 @@ class _MyAppState extends State<MyApp> {
         : fetchRepositories(_usernameController.text, _currentPage);
   }
 
+// Use shared preferences package to retrieve the previously selected theme mode
   void _retrieveThemeMode() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     int themeIndex = prefs.getInt('themeMode') ?? ThemeMode.light.index;
