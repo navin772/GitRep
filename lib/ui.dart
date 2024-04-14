@@ -57,12 +57,22 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> _changePage(int page) async {
-    setState(() {
-      _currentPage = page;
-    });
+  setState(() {
+    _currentPage = page;
+  });
 
-    final repositories =
-        await fetchRepositories(_usernameController.text, page);
+  if (_usernameController.text.isEmpty) {
+    // If username is empty, set repositories to an empty list
+    setState(() {
+      _repositories = Future.value([]);
+      _canLoadNextPage = false; // Disable next page loading
+      _fetchCommits.clear();
+    });
+    return;
+  }
+
+  try {
+    final repositories = await fetchRepositories(_usernameController.text, page);
     final hasNextPage = repositories.isNotEmpty;
 
     setState(() {
@@ -70,7 +80,14 @@ class _MyAppState extends State<MyApp> {
       _canLoadNextPage = hasNextPage;
       _fetchCommits.clear();
     });
+  } catch (error) {
+    setState(() {
+      _repositories = Future.error('The user does not exists on GitHub');
+      _canLoadNextPage = false; // Disable next page loading
+      _fetchCommits.clear();
+    });
   }
+}
 
   Future<void> _fetchAllCommitsAndNavigate(
       BuildContext context, Repository repository) async {
